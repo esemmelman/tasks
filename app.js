@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.1.2';
+const APP_VERSION = 'v1.1.4';
 const TABLE_NAME = 'taskroom_workspaces';
 const config = window.LINK_DECK_CONFIG;
 const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -210,7 +210,7 @@ window.addEventListener('click', (event) => {
   const nav = event.target.closest('.nav-link'); if (nav) { if (nav.dataset.view === 'items') { data.selectedId = null; save(); } switchView(nav.dataset.view); return; }
   if (event.target.matches('[data-close], .modal-backdrop')) { closeModal(); return; }
   if (event.target.matches('[data-delete-task]')) { deleteTask(selectedTask()); return; }
-  const row = event.target.closest('.task-row'); if (row) { const task = data.tasks.find((item) => item.id === row.dataset.id); if (event.target.closest('[data-action="toggle"]')) { data.selectedId = task.id; task.done = !task.done; save(); render(); } else if (event.target.closest('[data-action="edit"]')) { data.selectedId = task.id; render(); openTaskModal(task); } else if (event.target.closest('[data-action="delete"]')) { deleteTask(task); } else { data.selectedId = task.id; save(); switchView('tasks'); } return; }
+  const row = event.target.closest('.task-row'); if (row) { const task = data.tasks.find((item) => item.id === row.dataset.id); if (event.target.closest('[data-action="toggle"]')) { data.selectedId = task.id; task.done = !task.done; save(); render(); } else if (event.target.closest('[data-action="edit"]')) { data.selectedId = task.id; render(); openTaskModal(task); } else if (event.target.closest('[data-action="delete"]')) { deleteTask(task); } else { data.selectedId = task.id; save(); switchView('log'); } return; }
   const docAction = event.target.dataset.docAction; if (docAction) { const doc = data.docs.find((item) => item.id === event.target.dataset.id); if (docAction === 'edit') openDocModal(doc); if (docAction === 'delete' && confirm('Delete this document?')) { data.docs = data.docs.filter((item) => item.id !== doc.id); save(); render(); } return; }
   const docCard = event.target.closest('[data-doc-id]'); if (docCard) { openDocModal(data.docs.find((doc) => doc.id === docCard.dataset.docId)); return; }
   if (event.target.closest('[data-new-doc]')) openDocModal();

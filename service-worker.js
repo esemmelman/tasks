@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taskroom-shell-v4';
+const CACHE_NAME = 'taskroom-shell-v6';
 const APP_SHELL = [
   './',
   './index.html',
