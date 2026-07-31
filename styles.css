@@ -109,7 +109,8 @@ body { font-size: 17px; }
 /* Unified item toolbar */
 .task-layout { padding-top: 14px; }
 .list-toolbar { flex-wrap: wrap; min-height: 54px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.toolbar-items-link { border: 0; background: transparent; padding: 4px 0; color: var(--ink); font-size: 16px; font-weight: 800; text-decoration: none; }
+.toolbar-items-link { border: 0; background: transparent; padding: 4px 0; color: var(--ink); font-size: 16px; font-weight: 400; text-decoration: none; }
+.list-toolbar .new-item-plus { font-weight: 400; }
 .toolbar-items-link:hover { color: var(--coral); }
 .list-toolbar .category-filter { margin: 0; }
 .list-toolbar .nav-task-summary { margin: 0; }
