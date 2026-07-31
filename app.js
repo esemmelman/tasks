@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.1.4';
+const APP_VERSION = 'v1.1.5';
 const TABLE_NAME = 'taskroom_workspaces';
 const config = window.LINK_DECK_CONFIG;
 const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
