@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.1.8';
+const APP_VERSION = 'v1.1.9';
 const TABLE_NAME = 'taskroom_workspaces';
 const config = window.LINK_DECK_CONFIG;
 const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -262,4 +262,21 @@ if (db) {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch((error) => console.error('Service worker registration failed:', error)));
+}
+// Force installed PWAs to check for and activate the latest app shell on launch.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' });
+      await registration.update();
+    } catch (error) {
+      console.error('PWA update check failed', error);
+    }
+  });
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (sessionStorage.getItem('taskroom-worker-reloaded')) return;
+    sessionStorage.setItem('taskroom-worker-reloaded', 'true');
+    window.location.reload();
+  });
 }
