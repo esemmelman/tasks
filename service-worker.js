@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taskroom-shell-v7';
+const CACHE_NAME = 'taskroom-shell-v8';
 const APP_SHELL = [
   './',
   './index.html',
@@ -46,3 +46,5 @@ self.addEventListener('fetch', (event) => {
     return cached || refreshed;
   }));
 });
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
