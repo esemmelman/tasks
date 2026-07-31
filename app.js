@@ -157,3 +157,7 @@ document.querySelector('#new-task-button').addEventListener('click', () => openT
 document.querySelector('#category-filter').addEventListener('change', (event) => { categoryFilter = event.target.value; renderTasks(); });
 document.querySelector('#clear-data').addEventListener('click', () => { if (confirm('Clear all local tasks, logs, and docs?')) { data = { ...defaultData }; save(); render(); } });
 render();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch((error) => console.error('Service worker registration failed:', error)));
+}
