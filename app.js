@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.1.0';
+const APP_VERSION = 'v1.1.1';
 const TABLE_NAME = 'taskroom_workspaces';
 const config = window.LINK_DECK_CONFIG;
 const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -219,11 +219,14 @@ document.querySelector('#new-task-button').addEventListener('click', () => openT
 document.querySelector('#category-filter').addEventListener('change', (event) => { categoryFilter = event.target.value; renderTasks(); });
 document.querySelector('#clear-data').addEventListener('click', () => { if (confirm('Clear all items, tasks, logs, and documents from your Taskroom account?')) { data = { ...defaultData }; save(); render(); } });
 document.querySelector('#app-version').textContent = APP_VERSION;
-document.querySelector('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
+const authDialog = document.querySelector('#auth-dialog');
+authDialog.addEventListener('cancel', (event) => event.preventDefault());
+if (!authDialog.open) authDialog.showModal();
 document.querySelector('#auth-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = document.querySelector('#sign-in-button');
   const message = document.querySelector('#auth-message');
+  if (!db) { message.textContent = 'Could not load the secure sign-in service. Check your connection and reload.'; return; }
   button.disabled = true;
   message.textContent = 'Signing in…';
   const { error } = await db.auth.signInWithPassword({ email: document.querySelector('#auth-email').value.trim(), password: document.querySelector('#auth-password').value });
@@ -235,6 +238,7 @@ document.querySelector('#sign-up-button').addEventListener('click', async () => 
   if (!form.reportValidity()) return;
   const button = document.querySelector('#sign-up-button');
   const message = document.querySelector('#auth-message');
+  if (!db) { message.textContent = 'Could not load the secure sign-in service. Check your connection and reload.'; return; }
   button.disabled = true;
   message.textContent = 'Creating account…';
   const emailRedirectTo = `${window.location.origin}${window.location.pathname}`;
@@ -242,11 +246,19 @@ document.querySelector('#sign-up-button').addEventListener('click', async () => 
   button.disabled = false;
   message.textContent = error ? error.message : (authData.session ? '' : 'Check your email to confirm your account, then sign in.');
 });
-document.querySelector('#sign-out-button').addEventListener('click', () => db.auth.signOut());
+document.querySelector('#sign-out-button').addEventListener('click', () => db?.auth.signOut());
 
 render();
-db.auth.onAuthStateChange((_event, session) => setTimeout(() => applySession(session), 0));
-db.auth.getSession().then(({ data: sessionData }) => applySession(sessionData.session));
+if (db) {
+  db.auth.onAuthStateChange((_event, session) => setTimeout(() => applySession(session), 0));
+  db.auth.getSession().then(({ data: sessionData }) => applySession(sessionData.session)).catch((error) => {
+    setSyncStatus('Connection error');
+    document.querySelector('#auth-message').textContent = error.message;
+  });
+} else {
+  setSyncStatus('Connection error');
+  document.querySelector('#auth-message').textContent = 'Could not load the secure sign-in service. Check your connection and reload.';
+}
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch((error) => console.error('Service worker registration failed:', error)));
