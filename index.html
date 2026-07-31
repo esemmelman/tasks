@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taskroom</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-mark" aria-label="Taskroom home"><span></span></div>
+      <div class="side-meta"><span class="eyebrow">Workspace</span><strong>Taskroom</strong></div>
+      <div class="side-bottom"><span class="status-dot"></span><span>Local workspace</span></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand"><div class="brand-mark"><span></span></div><strong>Taskroom</strong></div>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <button class="nav-link active" data-view="items">Items</button>
+          <button class="nav-link" data-view="tasks">Tasks <span id="task-count" class="nav-count">0</span></button>
+          <button class="nav-link" data-view="log">Log</button>
+          <button class="nav-link" data-view="docs">Docs</button>
+          <div class="nav-task-summary"><span><strong id="open-count">0</strong> open</span><span><strong id="done-count">0</strong> complete</span></div>
+        </nav>
+        <button class="icon-button" id="clear-data" title="Clear all local data" aria-label="Clear all local data">↗</button>
+      </header>
+
+      <section id="items-view" class="view active-view">
+        <div class="task-layout">
+          <div class="task-list-panel">
+            <div class="list-toolbar">
+              <button class="new-item-plus" id="new-task-button" aria-label="New item" title="New item">＋</button>
+              <label class="category-filter" for="category-filter">Category <select id="category-filter"><option value="all">All</option></select></label>
+            </div>
+            <div id="task-list" class="task-list"></div>
+            <div id="item-tasks-panel" class="item-tasks-panel"></div>
+            <div id="log-content" class="item-detail-panel"></div>
+            <div id="docs-content" class="item-detail-panel"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="modal-root"></div>
+  <script src="app.js"></script>
+</body>
+</html>
