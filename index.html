@@ -24,28 +24,22 @@
     </aside>
 
     <main class="main-content">
-      <header class="topbar">
-        <div class="mobile-brand"><div class="brand-mark"><span></span></div><strong>Taskroom</strong></div>
-        <nav class="main-nav" aria-label="Primary navigation">
-          <button class="nav-link active" data-view="items">Items</button>
-          <span id="task-count" hidden>0</span>
-          <div class="nav-task-summary"><span><strong id="open-count">0</strong> open</span><span><strong id="done-count">0</strong> complete</span></div>
-        </nav>
-        <div class="account-actions">
-          <span id="sync-status" class="sync-status">Connecting…</span>
-          <span id="user-email" class="user-email" hidden></span>
-          <button id="sign-out-button" class="account-button" type="button" hidden>Sign out</button>
-          <span id="app-version" class="app-version"></span>
-          <button class="icon-button" id="clear-data" title="Clear all Taskroom data" aria-label="Clear all Taskroom data">↗</button>
-        </div>
-      </header>
-
       <section id="items-view" class="view active-view">
         <div class="task-layout">
           <div class="task-list-panel">
             <div class="list-toolbar">
               <button class="new-item-plus" id="new-task-button" aria-label="New item" title="New item">＋</button>
+              <button class="toolbar-items-link active" data-view="items">Items</button>
+              <span id="task-count" hidden>0</span>
               <label class="category-filter" for="category-filter"><span class="visually-hidden">Category</span><select id="category-filter" aria-label="Category"><option value="all">All</option></select></label>
+              <div class="nav-task-summary"><span><strong id="open-count">0</strong> open</span><span><strong id="done-count">0</strong> complete</span></div>
+              <div class="account-actions">
+                <span id="sync-status" class="sync-status">Connecting…</span>
+                <span id="user-email" class="user-email" hidden></span>
+                <button id="sign-out-button" class="account-button" type="button" hidden>Sign out</button>
+                <span id="app-version" class="app-version"></span>
+                <button class="icon-button" id="clear-data" title="Clear all Taskroom data" aria-label="Clear all Taskroom data">↗</button>
+              </div>
             </div>
             <div id="task-list" class="task-list"></div>
             <div id="item-notes-panel" class="item-detail-panel"></div>

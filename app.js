@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.2.0';
+const APP_VERSION = 'v1.2.1';
 const TABLE_NAME = 'taskroom_workspaces';
 const config = window.LINK_DECK_CONFIG;
 const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -214,13 +214,13 @@ function openDocModal(doc = null) {
 }
 
 function closeModal() { document.querySelector('#modal-root').innerHTML = ''; }
-function switchView(view) { activeView = view; document.querySelector('#items-view').classList.add('active-view'); document.querySelectorAll('.nav-link').forEach((element) => element.classList.toggle('active', element.dataset.view === 'items')); render(); }
+function switchView(view) { activeView = view; document.querySelector('#items-view').classList.add('active-view'); document.querySelectorAll('[data-view="items"]').forEach((element) => element.classList.toggle('active', true)); render(); }
 function escapeHtml(value = '') { const div = document.createElement('div'); div.textContent = value; return div.innerHTML; }
 function escapeAttribute(value = '') { return escapeHtml(value).replace(/"/g, '&quot;'); }
 function sanitizeDocHtml(html = '') { const template = document.createElement('template'); template.innerHTML = html; const allowed = new Set(['B', 'STRONG', 'U', 'FONT', 'DIV', 'P', 'BR']); template.content.querySelectorAll('*').forEach((element) => { if (!allowed.has(element.tagName)) { element.replaceWith(...element.childNodes); return; } [...element.attributes].forEach((attribute) => { if (element.tagName === 'FONT' && ['face', 'size'].includes(attribute.name.toLowerCase())) return; element.removeAttribute(attribute.name); }); }); return template.innerHTML; }
 
 window.addEventListener('click', (event) => {
-  const nav = event.target.closest('.nav-link'); if (nav) { if (nav.dataset.view === 'items') { data.selectedId = null; save(); } switchView(nav.dataset.view); return; }
+  const nav = event.target.closest('[data-view]'); if (nav) { if (nav.dataset.view === 'items') { data.selectedId = null; save(); } switchView(nav.dataset.view); return; }
   if (event.target.matches('[data-close], .modal-backdrop')) { closeModal(); return; }
   if (event.target.matches('[data-delete-task]')) { deleteTask(selectedTask()); return; }
   const row = event.target.closest('.task-row'); if (row) { const task = data.tasks.find((item) => item.id === row.dataset.id); const itemView = event.target.closest('[data-item-view]'); if (event.target.closest('[data-action="toggle"]')) { data.selectedId = task.id; task.done = !task.done; save(); render(); } else if (itemView) { switchView(itemView.dataset.itemView); } else if (event.target.closest('[data-action="edit"]')) { data.selectedId = task.id; render(); openTaskModal(task); } else if (event.target.closest('[data-action="delete"]')) { deleteTask(task); } else { data.selectedId = task.id; save(); switchView('notes'); } return; }

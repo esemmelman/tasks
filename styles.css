@@ -105,3 +105,25 @@ body { font-size: 17px; }
   .item-notes-panel, .item-detail-panel { padding: 14px; }
   .item-notes-editor { min-height: 48vh; padding: 14px; }
 }
+
+/* Unified item toolbar */
+.task-layout { padding-top: 14px; }
+.list-toolbar { flex-wrap: wrap; min-height: 54px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.toolbar-items-link { border: 0; background: transparent; padding: 4px 0; color: var(--ink); font-size: 16px; font-weight: 800; }
+.toolbar-items-link:hover { color: var(--coral); }
+.list-toolbar .category-filter { margin: 0; }
+.list-toolbar .nav-task-summary { margin: 0; }
+.list-toolbar .account-actions { margin: 0; }
+
+@media (max-width: 760px) {
+  .task-layout { padding-top: 8px; }
+  .list-toolbar { align-items: center; justify-content: flex-start; gap: 10px 12px; padding: 8px 0 10px; }
+  .toolbar-items-link { font-size: 15px; }
+  .list-toolbar .category-filter { margin: 0; }
+  .list-toolbar .category-filter select { min-width: 92px; max-width: 120px; font-size: 13px; }
+  .list-toolbar .nav-task-summary { display: flex; grid-column: auto; justify-content: flex-start; width: auto; height: auto; gap: 8px; padding: 0; border: 0; font-size: 9px; }
+  .list-toolbar .nav-task-summary strong { font-size: 11px; }
+  .list-toolbar .account-actions { position: static; display: flex; width: auto; height: auto; justify-content: flex-start; flex-wrap: wrap; gap: 8px; padding: 0; }
+  .list-toolbar .sync-status, .list-toolbar .user-email { display: inline; font-size: 9px; }
+  .list-toolbar .account-button, .list-toolbar .app-version { font-size: 9px; }
+}
