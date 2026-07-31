@@ -20,7 +20,7 @@
     <aside class="sidebar">
       <div class="brand-mark" aria-label="Taskroom home"><span></span></div>
       <div class="side-meta"><span class="eyebrow">Workspace</span><strong>Taskroom</strong></div>
-      <div class="side-bottom"><span class="status-dot"></span><span>Local workspace</span></div>
+      <div class="side-bottom"><span class="status-dot"></span><span>Supabase workspace</span></div>
     </aside>
 
     <main class="main-content">
@@ -33,7 +33,13 @@
           <button class="nav-link" data-view="docs">Docs</button>
           <div class="nav-task-summary"><span><strong id="open-count">0</strong> open</span><span><strong id="done-count">0</strong> complete</span></div>
         </nav>
-        <button class="icon-button" id="clear-data" title="Clear all local data" aria-label="Clear all local data">↗</button>
+        <div class="account-actions">
+          <span id="sync-status" class="sync-status">Connecting…</span>
+          <span id="app-version" class="app-version"></span>
+          <span id="user-email" class="user-email" hidden></span>
+          <button id="sign-out-button" class="account-button" type="button" hidden>Sign out</button>
+          <button class="icon-button" id="clear-data" title="Clear all Taskroom data" aria-label="Clear all Taskroom data">↗</button>
+        </div>
       </header>
 
       <section id="items-view" class="view active-view">
@@ -52,7 +58,20 @@
       </section>
     </main>
   </div>
+  <dialog id="auth-dialog" class="auth-dialog">
+    <form id="auth-form">
+      <p class="eyebrow">Private access</p>
+      <h2>Sign in to Taskroom</h2>
+      <p>Your items, tasks, logs, and documents are private to your Supabase account.</p>
+      <label>Email<input id="auth-email" type="email" autocomplete="email" required /></label>
+      <label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required /></label>
+      <p id="auth-message" class="auth-message" role="alert"></p>
+      <div class="auth-actions"><button id="sign-up-button" class="text-button" type="button">Create account</button><button id="sign-in-button" class="primary-button" type="submit">Sign in</button></div>
+    </form>
+  </dialog>
   <div id="modal-root"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

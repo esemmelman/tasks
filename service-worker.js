@@ -1,9 +1,10 @@
-const CACHE_NAME = 'taskroom-shell-v1';
+const CACHE_NAME = 'taskroom-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './supabase-config.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',
@@ -23,6 +24,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  if (new URL(event.request.url).origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).then((response) => {

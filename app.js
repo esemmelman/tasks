@@ -1,20 +1,82 @@
-const STORAGE_KEY = 'taskroom-data';
+const APP_VERSION = 'v1.1.0';
+const TABLE_NAME = 'taskroom_workspaces';
+const config = window.LINK_DECK_CONFIG;
+const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
 const today = new Date();
 const formatDate = (date) => new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(date));
 const uid = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36);
 
 const defaultData = { tasks: [], selectedId: null, logs: [], docs: [] };
-let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData;
+let data = { ...defaultData };
 let activeView = 'items';
 let categoryFilter = 'all';
-data.selectedId = null;
+let currentUser = null;
+let loadedUserId = null;
+let syncQueue = Promise.resolve();
 
-const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+const setSyncStatus = (message) => { document.querySelector('#sync-status').textContent = message; };
+const normalizeWorkspace = (value) => ({
+  tasks: Array.isArray(value?.tasks) ? value.tasks : [],
+  selectedId: null,
+  logs: Array.isArray(value?.logs) ? value.logs : [],
+  docs: Array.isArray(value?.docs) ? value.docs : []
+});
+const save = () => {
+  if (!currentUser) return;
+  const snapshot = JSON.parse(JSON.stringify(data));
+  setSyncStatus('Saving…');
+  syncQueue = syncQueue.catch(() => {}).then(async () => {
+    const { error } = await db.from(TABLE_NAME).upsert({ user_id: currentUser.id, data: snapshot, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    if (error) throw error;
+    setSyncStatus('Synced');
+  }).catch((error) => { setSyncStatus('Sync error'); console.error('Taskroom sync failed:', error); });
+};
 const selectedTask = () => data.tasks.find((task) => task.id === data.selectedId);
 const logEvent = (message, taskId = data.selectedId, manual = false) => {
   data.logs.unshift({ id: uid(), taskId, message, manual, date: new Date().toISOString() });
 };
 const isAutomaticLog = (message = '') => /^(Created this (item|task)\.|Added task |Updated task |Updated item details\.|Marked this item complete\.|Reopened this item\.|Added document |Added a new document\.|Updated document |Deleted a document\.)/.test(message);
+
+async function loadWorkspace() {
+  setSyncStatus('Loading…');
+  const { data: row, error } = await db.from(TABLE_NAME).select('data').eq('user_id', currentUser.id).maybeSingle();
+  if (error) throw error;
+  data = normalizeWorkspace(row?.data);
+  activeView = 'items';
+  categoryFilter = 'all';
+  if (!row) {
+    const { error: createError } = await db.from(TABLE_NAME).insert({ user_id: currentUser.id, data });
+    if (createError) throw createError;
+  }
+  setSyncStatus('Synced');
+  render();
+}
+
+async function applySession(session) {
+  const user = session?.user || null;
+  if (!user) {
+    currentUser = null;
+    loadedUserId = null;
+    data = { ...defaultData };
+    document.querySelector('#user-email').hidden = true;
+    document.querySelector('#sign-out-button').hidden = true;
+    setSyncStatus('Signed out');
+    render();
+    const dialog = document.querySelector('#auth-dialog');
+    if (!dialog.open) dialog.showModal();
+    return;
+  }
+  if (loadedUserId === user.id) return;
+  loadedUserId = user.id;
+  currentUser = user;
+  document.querySelector('#user-email').textContent = user.email;
+  document.querySelector('#user-email').hidden = false;
+  document.querySelector('#sign-out-button').hidden = false;
+  const dialog = document.querySelector('#auth-dialog');
+  if (dialog.open) dialog.close();
+  try { await loadWorkspace(); }
+  catch (error) { loadedUserId = null; setSyncStatus('Setup required'); console.error('Taskroom load failed:', error); alert(`Taskroom could not load from Supabase. Run supabase-schema.sql in the Supabase SQL Editor first.\n\n${error.message}`); }
+}
 
 function render() {
   const itemTasks = selectedTask()?.subtasks || [];
@@ -155,8 +217,36 @@ window.addEventListener('click', (event) => {
 });
 document.querySelector('#new-task-button').addEventListener('click', () => openTaskModal());
 document.querySelector('#category-filter').addEventListener('change', (event) => { categoryFilter = event.target.value; renderTasks(); });
-document.querySelector('#clear-data').addEventListener('click', () => { if (confirm('Clear all local tasks, logs, and docs?')) { data = { ...defaultData }; save(); render(); } });
+document.querySelector('#clear-data').addEventListener('click', () => { if (confirm('Clear all items, tasks, logs, and documents from your Taskroom account?')) { data = { ...defaultData }; save(); render(); } });
+document.querySelector('#app-version').textContent = APP_VERSION;
+document.querySelector('#auth-dialog').addEventListener('cancel', (event) => event.preventDefault());
+document.querySelector('#auth-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = document.querySelector('#sign-in-button');
+  const message = document.querySelector('#auth-message');
+  button.disabled = true;
+  message.textContent = 'Signing in…';
+  const { error } = await db.auth.signInWithPassword({ email: document.querySelector('#auth-email').value.trim(), password: document.querySelector('#auth-password').value });
+  button.disabled = false;
+  message.textContent = error ? error.message : '';
+});
+document.querySelector('#sign-up-button').addEventListener('click', async () => {
+  const form = document.querySelector('#auth-form');
+  if (!form.reportValidity()) return;
+  const button = document.querySelector('#sign-up-button');
+  const message = document.querySelector('#auth-message');
+  button.disabled = true;
+  message.textContent = 'Creating account…';
+  const emailRedirectTo = `${window.location.origin}${window.location.pathname}`;
+  const { data: authData, error } = await db.auth.signUp({ email: document.querySelector('#auth-email').value.trim(), password: document.querySelector('#auth-password').value, options: { emailRedirectTo } });
+  button.disabled = false;
+  message.textContent = error ? error.message : (authData.session ? '' : 'Check your email to confirm your account, then sign in.');
+});
+document.querySelector('#sign-out-button').addEventListener('click', () => db.auth.signOut());
+
 render();
+db.auth.onAuthStateChange((_event, session) => setTimeout(() => applySession(session), 0));
+db.auth.getSession().then(({ data: sessionData }) => applySession(sessionData.session));
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch((error) => console.error('Service worker registration failed:', error)));
