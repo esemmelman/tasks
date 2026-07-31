@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.1.9';
+const APP_VERSION = 'v1.2.0';
 const TABLE_NAME = 'taskroom_workspaces';
 const config = window.LINK_DECK_CONFIG;
 const db = window.supabase?.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -85,7 +85,7 @@ function render() {
   document.querySelector('#open-count').textContent = open;
   document.querySelector('#done-count').textContent = done;
   document.querySelector('#task-count').textContent = itemTasks.length;
-  renderCategoryFilter(); renderTasks(); renderItemTasks(); renderLog(); renderDocs();
+  renderCategoryFilter(); renderTasks(); renderItemNotes(); renderItemTasks(); renderLog(); renderDocs();
 }
 
 const taskCategory = (task) => task.category || task.tag || 'General';
@@ -116,9 +116,22 @@ function renderTasks() {
   if (!tasks.length) { list.innerHTML = '<div class="empty-state">No items in this category.</div>'; return; }
   list.innerHTML = tasks.map((task) => `<div class="task-row ${task.id === data.selectedId ? 'selected' : ''} ${task.done ? 'completed' : ''}" data-id="${task.id}">
     <button class="check ${task.done ? 'done' : ''}" data-action="toggle" aria-label="Mark ${escapeHtml(task.title)} ${task.done ? 'open' : 'complete'}">${task.done ? '✓' : ''}</button>
-    <button class="task-title" data-action="select"><span class="task-name">${escapeHtml(task.title)}</span><span class="task-meta"><span class="category">${escapeHtml(taskCategory(task))}</span><span class="priority priority-${escapeAttribute((task.priority || 'Medium').toLowerCase())}">${escapeHtml(task.priority || 'Medium')} priority</span></span></button>
-    <span class="row-actions"><button class="row-edit" data-action="edit">Edit</button><button class="row-delete-label" data-action="delete">Delete</button></span>
+    <div class="task-info"><button class="task-title" data-action="select"><span class="task-name">${escapeHtml(task.title)}</span><span class="task-meta"><span class="category">${escapeHtml(taskCategory(task))}</span><span class="priority priority-${escapeAttribute((task.priority || 'Medium').toLowerCase())}">${escapeHtml(task.priority || 'Medium')} priority</span></span></button>${task.id === data.selectedId ? '<div class="item-row-menu"><button data-item-view="log">Log</button><button data-item-view="tasks">Tasks</button><button data-item-view="docs">Docs</button><button data-action="edit">Edit</button><button data-action="delete">Delete</button></div>' : ''}</div>
   </div>`).join('');
+}
+
+function renderItemNotes() {
+  const panel = document.querySelector('#item-notes-panel');
+  panel.hidden = activeView !== 'notes';
+  if (panel.hidden) { panel.innerHTML = ''; return; }
+  const item = selectedTask();
+  if (!item) { panel.innerHTML = ''; return; }
+  const initialHtml = sanitizeDocHtml(item.descriptionHtml || escapeHtml(item.description || '').replace(/\n/g, '<br>'));
+  panel.innerHTML = `<form id="item-notes-form"><div class="editor-toolbar" role="toolbar" aria-label="Item notes formatting"><button type="button" data-item-format="bold"><strong>B</strong></button><button type="button" data-item-format="underline"><u>U</u></button><label>Size <select data-item-format-select="fontSize"><option value="2">Small</option><option value="3" selected>Normal</option><option value="5">Large</option><option value="6">Extra large</option></select></label><label>Font <select data-item-format-select="fontName"><option value="Manrope">Manrope</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Courier New">Courier</option></select></label></div><div id="item-notes-editor" class="doc-editor item-notes-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Add notes for this item...">${initialHtml}</div><div class="item-notes-actions"><button class="primary-button" type="submit">Save notes</button></div></form>`;
+  const editor = panel.querySelector('#item-notes-editor');
+  panel.querySelectorAll('[data-item-format]').forEach((button) => button.addEventListener('click', () => { editor.focus(); document.execCommand(button.dataset.itemFormat, false); }));
+  panel.querySelectorAll('[data-item-format-select]').forEach((select) => select.addEventListener('change', () => { editor.focus(); document.execCommand(select.dataset.itemFormatSelect, false, select.value); }));
+  panel.querySelector('#item-notes-form').addEventListener('submit', (event) => { event.preventDefault(); item.descriptionHtml = sanitizeDocHtml(editor.innerHTML); item.description = editor.innerText; save(); });
 }
 
 function renderItemTasks() {
@@ -201,7 +214,7 @@ function openDocModal(doc = null) {
 }
 
 function closeModal() { document.querySelector('#modal-root').innerHTML = ''; }
-function switchView(view) { activeView = view; document.querySelector('#items-view').classList.add('active-view'); document.querySelectorAll('.nav-link').forEach((element) => element.classList.toggle('active', element.dataset.view === view)); render(); }
+function switchView(view) { activeView = view; document.querySelector('#items-view').classList.add('active-view'); document.querySelectorAll('.nav-link').forEach((element) => element.classList.toggle('active', element.dataset.view === 'items')); render(); }
 function escapeHtml(value = '') { const div = document.createElement('div'); div.textContent = value; return div.innerHTML; }
 function escapeAttribute(value = '') { return escapeHtml(value).replace(/"/g, '&quot;'); }
 function sanitizeDocHtml(html = '') { const template = document.createElement('template'); template.innerHTML = html; const allowed = new Set(['B', 'STRONG', 'U', 'FONT', 'DIV', 'P', 'BR']); template.content.querySelectorAll('*').forEach((element) => { if (!allowed.has(element.tagName)) { element.replaceWith(...element.childNodes); return; } [...element.attributes].forEach((attribute) => { if (element.tagName === 'FONT' && ['face', 'size'].includes(attribute.name.toLowerCase())) return; element.removeAttribute(attribute.name); }); }); return template.innerHTML; }
@@ -210,7 +223,7 @@ window.addEventListener('click', (event) => {
   const nav = event.target.closest('.nav-link'); if (nav) { if (nav.dataset.view === 'items') { data.selectedId = null; save(); } switchView(nav.dataset.view); return; }
   if (event.target.matches('[data-close], .modal-backdrop')) { closeModal(); return; }
   if (event.target.matches('[data-delete-task]')) { deleteTask(selectedTask()); return; }
-  const row = event.target.closest('.task-row'); if (row) { const task = data.tasks.find((item) => item.id === row.dataset.id); if (event.target.closest('[data-action="toggle"]')) { data.selectedId = task.id; task.done = !task.done; save(); render(); } else if (event.target.closest('[data-action="edit"]')) { data.selectedId = task.id; render(); openTaskModal(task); } else if (event.target.closest('[data-action="delete"]')) { deleteTask(task); } else { data.selectedId = task.id; save(); switchView('log'); } return; }
+  const row = event.target.closest('.task-row'); if (row) { const task = data.tasks.find((item) => item.id === row.dataset.id); const itemView = event.target.closest('[data-item-view]'); if (event.target.closest('[data-action="toggle"]')) { data.selectedId = task.id; task.done = !task.done; save(); render(); } else if (itemView) { switchView(itemView.dataset.itemView); } else if (event.target.closest('[data-action="edit"]')) { data.selectedId = task.id; render(); openTaskModal(task); } else if (event.target.closest('[data-action="delete"]')) { deleteTask(task); } else { data.selectedId = task.id; save(); switchView('notes'); } return; }
   const docAction = event.target.dataset.docAction; if (docAction) { const doc = data.docs.find((item) => item.id === event.target.dataset.id); if (docAction === 'edit') openDocModal(doc); if (docAction === 'delete' && confirm('Delete this document?')) { data.docs = data.docs.filter((item) => item.id !== doc.id); save(); render(); } return; }
   const docCard = event.target.closest('[data-doc-id]'); if (docCard) { openDocModal(data.docs.find((doc) => doc.id === docCard.dataset.docId)); return; }
   if (event.target.closest('[data-new-doc]')) openDocModal();

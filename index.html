@@ -28,9 +28,7 @@
         <div class="mobile-brand"><div class="brand-mark"><span></span></div><strong>Taskroom</strong></div>
         <nav class="main-nav" aria-label="Primary navigation">
           <button class="nav-link active" data-view="items">Items</button>
-          <button class="nav-link" data-view="log">Log</button>
-          <button class="nav-link" data-view="tasks">Tasks <span id="task-count" class="nav-count">0</span></button>
-          <button class="nav-link" data-view="docs">Docs</button>
+          <span id="task-count" hidden>0</span>
           <div class="nav-task-summary"><span><strong id="open-count">0</strong> open</span><span><strong id="done-count">0</strong> complete</span></div>
         </nav>
         <div class="account-actions">
@@ -50,6 +48,7 @@
               <label class="category-filter" for="category-filter"><span class="visually-hidden">Category</span><select id="category-filter" aria-label="Category"><option value="all">All</option></select></label>
             </div>
             <div id="task-list" class="task-list"></div>
+            <div id="item-notes-panel" class="item-detail-panel"></div>
             <div id="item-tasks-panel" class="item-tasks-panel"></div>
             <div id="log-content" class="item-detail-panel"></div>
             <div id="docs-content" class="item-detail-panel"></div>
